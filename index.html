@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>内在频率简测</title>
+    <style>
+        :root { --bg: #0a081a; --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.08); --active: rgba(0, 242, 254, 0.3); }
+        
+        /* 基础样式与隐藏滚动条 */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background-color: var(--bg); color: #fff; 
+            font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+            overflow: hidden; /* 禁止外层随意滚动 */
+        }
+
+        /* 动态流光背景 */
+        .bg-glow { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: #0a081a; }
+        .circle { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.3; animation: move linear infinite; }
+        .c1 { width: 400px; height: 400px; background: #302b63; top: -100px; left: -100px; animation-duration: 20s; }
+        .c2 { width: 350px; height: 350px; background: #0f3443; bottom: -50px; right: -50px; animation-duration: 25s; animation-direction: reverse; }
+        @keyframes move { 0% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(30px, 50px) rotate(180deg); } 100% { transform: translate(0, 0) rotate(360deg); } }
+
+        /* 主容器：隐藏滚动条但允许内容滚动 */
+        .container { 
+            width: 100%; height: 100%; 
+            overflow-y: auto; overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px; 
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE */
+        }
+        .container::-webkit-scrollbar { display: none; /* Chrome/Safari */ }
+
+        .content-box { width: 100%; max-width: 450px; margin: 0 auto; padding-bottom: 60px; }
+
+        /* 封面排版 */
+        .logo-box { width:80px; height:80px; border:2px solid var(--accent); border-radius:50%; margin:40px auto 20px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px var(--accent); }
+        .keywords { display: flex; justify-content: center; gap: 10px; margin: 20px 0; font-size: 13px; color: var(--accent); }
+        .k-item { border-left: 1px solid rgba(0, 242, 254, 0.4); padding-left: 10px; }
+        .k-item:first-child { border: none; }
+
+        /* 选项样式 */
+        .option { background: var(--glass); padding: 18px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; position: relative; overflow: hidden; font-size: 15px; line-height: 1.5; }
+        .option:active { background: rgba(0, 242, 254, 0.2); }
+        .ripple { position: absolute; background: rgba(0, 242, 254, 0.4); border-radius: 50%; transform: scale(0); animation: rip 0.4s linear; pointer-events: none; }
+        @keyframes rip { to { transform: scale(4); opacity: 0; } }
+
+        /* 阶梯与结果页 */
+        .ladder { display: flex; flex-direction: column-reverse; gap: 6px; margin: 20px 0; }
+        .step { width: 85%; margin: 0 auto; padding: 10px; text-align: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; font-size: 12px; color: rgba(255,255,255,0.4); transition: 0.3s; }
+        .step.active { width: 100%; background: var(--active); border-color: var(--accent); color: #fff; box-shadow: 0 0 20px var(--accent); font-weight: bold; }
+        .report-card { background: rgba(0,0,0,0.6); border: 1px solid var(--accent); padding: 22px; border-radius: 15px; line-height: 1.8; font-size: 14px; text-align: justify; backdrop-filter: blur(10px); }
+
+        .btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 15px; border-radius: 30px; width: 100%; cursor: pointer; font-size: 16px; margin-top: 20px; outline: none; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"><div class="circle c1"></div><div class="circle c2"></div></div>
+    
+    <div class="container">
+        <div class="content-box">
+            <div id="ui-start" style="text-align: center;">
+                <div class="logo-box"><span style="color:var(--accent); font-size:24px; font-weight:bold;">HZ</span></div>
+                <h1 style="letter-spacing:5px; font-weight:300;">内在频率简测</h1>
+                <div class="keywords">
+                    <div class="k-item">能量漏斗</div><div class="k-item">语言与念头</div><div class="k-item">高频状态</div>
+                </div>
+                <p style="opacity:0.7; font-size:13px; line-height:2.2; margin:30px 0;">
+                    所有的成果都来自行动而非空转<br>
+                    只有当下好了，未来才真正可期
+                </p>
+                <button class="btn" onclick="app.begin()">开始检测 START</button>
+            </div>
+
+            <div id="ui-quiz" style="display:none;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:30px; font-size:12px; opacity:0.6;">
+                    <span>Inner Frequency Test</span>
+                    <span id="quiz-num">01 / 40</span>
+                </div>
+                <div id="quiz-q" style="font-size:1.1rem; min-height:80px; margin-bottom:30px; line-height:1.6;"></div>
+                <div id="quiz-opts"></div>
+            </div>
+
+            <div id="ui-result" style="display:none;" class="fade-in">
+                <h2 style="text-align:center; color:var(--accent); font-weight:300; margin-bottom:30px;">检测报告</h2>
+                <div class="ladder" id="res-ladder"></div>
+                <div class="report-card">
+                    <div id="res-title" style="font-size:18px; color:var(--accent); margin-bottom:12px; font-weight:bold; border-bottom:1px solid var(--accent); padding-bottom:8px;"></div>
+                    <div id="res-content"></div>
+                </div>
+                <button class="btn" onclick="location.reload()">重新测试 RESTART</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const app = {
+        state: { cur: 0, score: 0 },
+        // 核心 40 道独立题目
+        questions: [
+            { q: "当生活突然偏离预期轨道，你的直觉反应是？", a: ["坦然接受，相信是机会的开始","冷静分析补救","愤怒寻找责任人","恐慌觉得被针对"] },
+            { q: "在清理列表或做小决策（如点餐）时，你的习惯是？", a: ["设定简单标准，快速完成","会纠结但能决定","反复对比怕选错","犹豫不决导致内耗心累"] },
+            { q: "面对过去让你尴尬或犯过的错误，你会？", a: ["复盘复原并原谅自己","偶尔想起会自责","反复内疚无法释怀","不敢疗愈自我折磨"] },
+            { q: "还没行动就开始反复谋划、预演困难时，你会？", a: ["意识到能量空转，先做一分钟","告诉自己顺其自然","提前焦虑烦恼","在内心拉扯间耗干精力"] },
+            { q: "关于“思考”与“行动”，你更倾向于？", a: ["行动时不自我怀疑","尽量分开但会犹豫","边干边想经常推翻","在行动中自我怀疑"] },
+            { q: "想做的事情太多（如工作、运动、家务）时？", a: ["保重中之重，其余推后","尽量塞满任务","想同时做好所有事","压力太大导致瘫痪"] },
+            { q: "如果行动力变弱，你的止损策略是？", a: ["先啃下一个小目标","等待心情变好","强迫面对大目标","自我贬低彻底放弃"] },
+            { q: "面对涉及金钱或人的重大决策时？", a: ["情绪起伏时过夜再定","强迫冷静迅速决定","越急越想立刻解决","逼着自己立刻决定"] },
+            { q: "你是否经常觉得“明明没干什么，但就是特别累”？", a: ["很少，不消耗能量在判断上","偶尔会有这种感觉","经常发生，以为是体力差","每天都处于心累空转中"] },
+            { q: "对于尚未发生的事情，你的态度是？", a: ["见招拆招，相信事缓则圆","做好打算积极应对","频繁设想负面结果","活在恐惧中不敢迈步"] },
+            { q: "关于语言，你日常的口头禅更接近哪种？", a: ["我很好，一切都很美好","少说负面词汇","习惯说：好烦、真倒霉","经常抱怨自己能力不行"] },
+            { q: "执行计划遇到挫折（如车子晚点、断电）时？", a: ["凡事发生皆有利于我","忍着情绪继续做","抱怨运气不好","情绪崩溃认为生活不公"] },
+            { q: "面对长期任务（如读书、运动），你的节奏是？", a: ["专注过程，不急不躁","每天严格逼迫自己","急于求成看效果","三分钟热度很快放弃"] },
+            { q: "当你准备默默做一件重要大事时，你会？", a: ["事以密成，连神明都不讲","只告诉个别朋友","发朋友圈寻求监督","到处说直到能量吹散"] },
+            { q: "你如何评价自己的能力与状态？", a: ["永远不自我贬低","偶尔谦虚但自信","常抱怨自己不行","常向人示弱求安慰"] },
+            { q: "你的执行风格通常表现为？", a: ["敏于行，语迟则贵","边说边做节奏快","嘴快脑慢不负责","犹豫不决拖拉到底"] },
+            { q: "当你拖延恐惧时，会尝试“一分钟法则”吗？", a: ["会，先做一分钟任何事","偶尔会强迫动一下","等心情降临","瘫着直到死线临头"] },
+            { q: "你对财富和运气的底层感知是？", a: ["磁场平和，配得上好事","努力赚钱，不信磁场","觉得富人都是靠运气","感觉自己财运非常差"] },
+            { q: "遭遇重大挫败后，你的第一念头是？", a: ["触底反弹，否极泰来","痛苦但寻找新机会","长期沉溺在阴影里","彻底否定人生意义"] },
+            { q: "你如何规划学习或工作任务？", a: ["搞定一件再去搞下一件","塞满日程感觉充实","手忙脚乱处理杂事","没有规划被生活推着走"] },
+            { q: "你会频繁关注别人的动态或朋友圈吗？", a: ["从不关注，只求己强","有空才看","忍不住揣测别人想法","别人好坏严重影响我"] },
+            { q: "面对爱抱怨、消极的社交关系，你会？", a: ["坚决清理出自己的社交圈","保持距离","试图开导对方","跟着一起吐槽吸收负能量"] },
+            { q: "当别人对你有负面评价时，你会？", a: ["拥有被讨厌的勇气","虽不舒服但能调整","拼命解释挽回形象","陷入内耗甚至抑郁"] },
+            { q: "当别人对你有正面夸奖时，你会？", a: ["淡然处之不依赖认可","很开心并维持形象","担心让夸奖者失望","极度依赖并讨好别人"] },
+            { q: "你在沟通中，语速和语气通常是？", a: ["回应稍钝，给自己留余地","一板一眼，追求高效","说话过脑慢，急于表达","一张口就把话说绝了"] },
+            { q: "如果朋友把你当做“负能量充电宝”？", a: ["拒绝单向索取并止损","安慰一会找借口走","认真倾听自己难受","觉得有义务拯救对方"] },
+            { q: "看到社会争议或负面新闻，你会？", a: ["收回注意力，不去空转","扫一眼就走","忍不住加入网络骂战","感到世界黑暗，心灰意冷"] },
+            { q: "面对别人的无理贬低或PUA？", a: ["足够笃定，做自己的光","反击但心情变差","开始怀疑并相信对方","寄希望于对方变好"] },
+            { q: "看到他人的成功，你的第一反应是？", a: ["欣赏对方并学习长处","觉得自己也得努力","觉得对方是歪门邪道","嫉妒并希望对方出丑"] },
+            { q: "关于“爱”与“变好”，你认为？", a: ["自己爱自己，掌控命运","寻求外界的爱与支持","寄希望于贵人出现","需要依靠他人才能变好"] },
+            { q: "当你完全没动力时，你会？", a: ["只做打扫等简单动作修行","听激发鸡汤","等待动力降临","陷入瘫痪状态"] },
+            { q: "你对“当下”的掌控力如何？", a: ["只有当下好了，过去才有意义","活在当下但常有焦虑","后悔过去，频频回顾","预支未来烦恼，无法呼吸"] },
+            { q: "你认为改变能量状态的关键是？", a: ["维护后天不空转，止损内耗","改变先天体质","寻找外界高能量场","听从天命无法改变"] },
+            { q: "面对失去的人、物或金钱？", a: ["相信能量守恒，会回来","旧的不去新的不来","反复纠结为何失去","认为这是倒霉的诅咒"] },
+            { q: "你是否习惯性预设失败？", a: ["不预设，只关注行动成果","虽担心但会去做","脑补失败后的流言","还没干就觉得肯定不行"] },
+            { q: "身处低谷时，你的自我安慰逻辑是？", a: ["生活在教我细腻，呈上细节","逆境是天定的命数","低谷是碾碎我的磨盘","人生本来就是苦难"] },
+            { q: "当发现做选择非常痛苦时？", a: ["建立标准流程，降低判断成本","强撑着继续处理","逃避选择，让别人定","在犹豫中反复损耗"] },
+            { q: "你认为赚钱的核心驱动力是？", a: ["旺盛的体质与高能量状态","勤奋努力","运气与时机","精明与算计"] },
+            { q: "面对突发情绪起伏时，你的原则？", a: ["缓一缓，不做人与钱决策","忍住情绪硬干","随性发泄真性情","被情绪主导做错决策"] },
+            { q: "完成这个测试，你此刻的念头？", a: ["意识到空转，开始践行止损","好奇结果准不准","觉得有点累","认为这没意义"] }
+        ],
+        // 结果等级与讲解文案 
+        levels: [
+            { hz: 700, name: "开悟/无限态", s: 180, d: "您已摆脱二元对立的内耗。您的能量不再空转，处于极致的‘临在’状态。正如文案所说：您的存在本身就是疗愈。行动与思考高度合一，无往不利。" },
+            { hz: 540, name: "喜悦/心流态", s: 155, d: "爱与喜悦是您的本能。您深谙‘凡事发生皆有利于我’的秘诀，不再抱怨失去。您的行动力极强，且不带任何自我怀疑。" },
+            { hz: 400, name: "理性/洞察态", s: 130, d: "能看穿事物的本质。您懂得‘事缓则圆，语迟则贵’。在决策时能‘让子弹飞一会’，避免情绪化的冲动操作，是思想家常驻的频率。" },
+            { hz: 350, name: "和谐/接纳态", s: 105, d: "您懂得原谅别人，更要原谅自己。您已建立被讨厌的勇气，收回关注他人的能量，专注于自身内核的变强，生活正变得自在顺遂。" },
+            { hz: 300, name: "意愿/进取态", s: 80, d: "所有的成果都来自行动而非空转。您正处于转变期，开始练习‘行动不思考，思考不行动’，正通过微小目标的达成从内耗中挣脱。" },
+            { hz: 250, name: "平衡/淡定态", s: 50, d: "您的能量状态趋于平稳。只要停止自我贬低，不再扮演‘情绪充电宝’，您的能量场将很快迎来指数级的爆发。" },
+            { hz: 200, name: "勇气/突破态", s: 30, d: "您决定不再逃避。请停止对他人的期待，开始练习爱自己，掌控自己的命运。这是意识跃迁的关键起点。" },
+            { hz: 150, name: "负累/消耗区", s: 0, d: "当前能量损耗较大，处于‘空转’严重期：还没行动，盘算和谋划就已经耗尽了精神。建议：立即停止自我检讨和内疚，停止关注他人动态。从打扫房间等简单动作开始强制收回注意力，给自己‘关机重启’的机会。" }
+        ],
+        begin: function() {
+            document.getElementById('ui-start').style.display = 'none';
+            document.getElementById('ui-quiz').style.display = 'block';
+            this.render();
+        },
+        render: function() {
+            if (this.state.cur >= this.questions.length) return this.done();
+            const q = this.questions[this.state.cur];
+            document.getElementById('quiz-num').innerText = (this.state.cur + 1).toString().padStart(2, '0') + " / 40";
+            document.getElementById('quiz-q').innerText = q.q;
+            const box = document.getElementById('quiz-opts');
+            box.innerHTML = '';
+            const _this = this;
+            q.a.forEach((txt, i) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerText = txt;
+                div.onclick = (e) => { _this.pick(e, i); };
+                box.appendChild(div);
+            });
+        },
+        pick: function(e, i) {
+            const r = e.target.getBoundingClientRect();
+            const rip = document.createElement('span');
+            rip.className = 'ripple';
+            rip.style.left = (e.clientX - r.left) + 'px';
+            rip.style.top = (e.clientY - r.top) + 'px';
+            rip.style.width = rip.style.height = Math.max(r.width, r.height) + 'px';
+            e.target.appendChild(rip);
+            this.state.score += [5, 3, 1, 0][i];
+            const _this = this;
+            setTimeout(() => { _this.state.cur++; _this.render(); }, 300);
+        },
+        done: function() {
+            document.getElementById('ui-quiz').style.display = 'none';
+            document.getElementById('ui-result').style.display = 'block';
+            const res = this.levels.find(l => this.state.score >= l.s) || this.levels[this.levels.length-1];
+            const lad = document.getElementById('res-ladder');
+            lad.innerHTML = '';
+            this.levels.forEach(l => {
+                const d = document.createElement('div');
+                d.className = l.hz === res.hz ? 'step active' : 'step';
+                d.innerText = l.hz + " " + l.name;
+                lad.appendChild(d);
+            });
+            document.getElementById('res-title').innerText = res.hz + " " + res.name;
+            document.getElementById('res-content').innerText = res.d;
+            document.querySelector('.container').scrollTop = 0;
+        }
+    };
+</script>
+</body>
+</html>
